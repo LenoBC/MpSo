@@ -33,8 +33,12 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(opt =>
         {
             opt.UseSqlite(configuration.GetConnectionString("DefaultConnection"),
-            b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+            x => x.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
         });
+
+        using var scope = services.BuildServiceProvider().CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
 
         var baseUrl = configuration.GetValue<string>("TagFetchSettings:BaseUrl");
         if (string.IsNullOrWhiteSpace(baseUrl))

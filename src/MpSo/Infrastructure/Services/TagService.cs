@@ -27,22 +27,7 @@ public class TagService(IHttpClientFactory httpClientFactory, IOptionsMonitor<Ta
         return allTags;
     }
 
-    private (int pagesToFetch, int pageSize) GetTagFetchSettings()
-    {
-        var settings = _tagFetchSettings.CurrentValue;
-        if (settings.PagesToFetch <= 0 || settings.PageSize <= 0 || settings.PagesToFetch * settings.PageSize < AppConstants.MinTagsToFetch)
-        {
-            settings.PagesToFetch = AppConstants.DefaultPagesToFetch;
-            settings.PageSize = AppConstants.DefaultPageSize;
-
-            _logger.LogWarning("Invalid TagFetchSettings detected. Using default values: {PagesToFetch}, {PageSize}", settings.PagesToFetch, settings.PageSize);
-        }
-
-        _logger.LogInformation("Fetching {PagesToFetch} pages of tags with {PageSize} tags each.", settings.PagesToFetch, settings.PageSize);
-        return (settings.PagesToFetch, settings.PageSize);
-    }
-
-    private async Task<List<Tag>> FetchTagsFromApiAsync(int pagesToFetch, int pageSize)
+    public async Task<List<Tag>> FetchTagsFromApiAsync(int pagesToFetch, int pageSize)
     {
         var allTags = new List<Tag>();
 
@@ -79,6 +64,21 @@ public class TagService(IHttpClientFactory httpClientFactory, IOptionsMonitor<Ta
         }
 
         return allTags;
+    }
+
+    private (int pagesToFetch, int pageSize) GetTagFetchSettings()
+    {
+        var settings = _tagFetchSettings.CurrentValue;
+        if (settings.PagesToFetch <= 0 || settings.PageSize <= 0)
+        {
+            settings.PagesToFetch = AppConstants.DefaultPagesToFetch;
+            settings.PageSize = AppConstants.DefaultPageSize;
+
+            _logger.LogWarning("Invalid TagFetchSettings detected. Using default values: {PagesToFetch}, {PageSize}", settings.PagesToFetch, settings.PageSize);
+        }
+
+        _logger.LogInformation("Fetching {PagesToFetch} pages of tags with {PageSize} tags each.", settings.PagesToFetch, settings.PageSize);
+        return (settings.PagesToFetch, settings.PageSize);
     }
 
     private record ApiResponse

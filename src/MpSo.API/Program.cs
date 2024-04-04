@@ -1,12 +1,25 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.ResponseCompression;
 using MpSo;
 using MpSo.Api.Filters;
 using MpSo.API.Extensions;
 using Serilog;
+using System.IO.Compression;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddResponseCompression(opt =>
+{
+    opt.EnableForHttps = true;
+    opt.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(opt =>
+{
+    opt.Level = CompressionLevel.Fastest;
+});
 
 builder.Services.AddControllers(opt =>
 {
@@ -60,6 +73,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 
 app.UseHttpsRedirection();
+app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
 {
@@ -70,9 +84,13 @@ else
     app.UseExceptionHandler("/error");
 }
 
+app.MapHealthChecks("/health");
+
 app.UseSerilogRequestLogging();
 
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
